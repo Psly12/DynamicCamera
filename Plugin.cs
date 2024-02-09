@@ -21,8 +21,6 @@ namespace DynamicCamera
         private const nint DISTANCE_OFFSET = 0x748;
         private const nint HEIGHT_OFFSET = 0x744;
 
-        private const float SMOOTHING_FACTOR = 0.03f;
-
         private const float CAMERA_DISTANCE_MIN = -1500f;
         private const float CAMERA_DISTANCE_MAX = 2000f;
         private const float CAMERA_HEIGHT_MIN = -1125f;
@@ -90,7 +88,6 @@ namespace DynamicCamera
             cameraBaseHeight = cameraSave.BaseCamera.CameraHeight;
             cameraCombatDistance = cameraSave.CombatCamera.CameraDistance;
             cameraCombatHeight = cameraSave.CombatCamera.CameraHeight;
-
         }
 
         private bool IsInNonCombatArea() => nonCombatStages.Contains(Area.CurrentStage);
@@ -136,7 +133,6 @@ namespace DynamicCamera
             float actualCamDistance = (float)Math.Round(camera.Get<float>(DISTANCE_OFFSET), 6);
             float actualCamHeight = (float)Math.Round(camera.Get<float>(HEIGHT_OFFSET), 6);
 
-
             if (distPatchFlag)
             {
                 float tempCustomDistanceEN = IsInNonCombatArea() ? cameraBaseDistance : cameraCombatDistance;
@@ -144,28 +140,16 @@ namespace DynamicCamera
 
                 _distPatch.Enable();
 
-                if (Math.Abs(actualCamDistance - tempCustomDistanceEN) > 0.1f) 
-                {
-                    float directionDistance = Math.Sign(tempCustomDistanceEN - actualCamDistance);
-                    actualCamDistance += directionDistance * Math.Abs(tempCustomDistanceEN - actualCamDistance) * SMOOTHING_FACTOR;
-                    camera.GetRef<float>(DISTANCE_OFFSET) = actualCamDistance;
-                }
-                if (Math.Abs(actualCamHeight - tempCustomHeightEN) > 0.1f) 
-                {
-                    float directionHeight = Math.Sign(tempCustomHeightEN - actualCamHeight);
-                    actualCamHeight += directionHeight * Math.Abs(tempCustomHeightEN - actualCamHeight) * SMOOTHING_FACTOR;
-                    camera.GetRef<float>(HEIGHT_OFFSET) = actualCamHeight;
-                }
+                camera.GetRef<float>(DISTANCE_OFFSET) = Utils.CameraSmooth(actualCamDistance, tempCustomDistanceEN);
+                camera.GetRef<float>(HEIGHT_OFFSET) = Utils.CameraSmooth(actualCamHeight, tempCustomHeightEN);
             }
             else
-            {
+            { 
                 if (actualCamDistance >= CAMERA_DISTANCE_MIN && actualCamDistance <= CAMERA_DISTANCE_MAX)
                 {
                     if (Math.Abs(actualCamDistance) > 0.1f)
                     {
-                        float directionDistance = Math.Sign(0f - actualCamDistance);
-                        actualCamDistance += directionDistance * Math.Abs(0f - actualCamDistance) * SMOOTHING_FACTOR;
-                        camera.GetRef<float>(DISTANCE_OFFSET) = actualCamDistance;    
+                        camera.GetRef<float>(DISTANCE_OFFSET) = Utils.CameraSmooth(actualCamDistance, 0f);
                     }
                     else
                     {
@@ -178,9 +162,7 @@ namespace DynamicCamera
                 {
                     if (Math.Abs(actualCamHeight) > 0.1f)
                     {
-                        float directionHeight = Math.Sign(0f - actualCamHeight);
-                        actualCamHeight += directionHeight * Math.Abs(0f - actualCamHeight) * SMOOTHING_FACTOR;
-                        camera.GetRef<float>(HEIGHT_OFFSET) = actualCamHeight;
+                        camera.GetRef<float>(HEIGHT_OFFSET) = Utils.CameraSmooth(actualCamHeight, 0f);
                     }
                     else
                     {
