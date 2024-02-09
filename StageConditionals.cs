@@ -1,6 +1,5 @@
 ﻿using SharpPluginLoader.Core;
 
-
 namespace DynamicCamera
 {
     internal class StageConditionals
