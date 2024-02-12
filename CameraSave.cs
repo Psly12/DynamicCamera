@@ -6,23 +6,18 @@ namespace DynamicCamera
     public class CameraSave
     {
         public CameraClass? BaseCamera { get; set; }
-        public CombatCamera? CombatCamera { get; set; }
+        public CameraClass? CombatCamera { get; set; }
 
         public CameraSave()
         {
             // Set default values for BaseCamera and CombatCamera
             BaseCamera = new CameraClass { CameraDistance = 90f, CameraHeight = -40f };
-            CombatCamera = new CombatCamera { CameraDistance = -210f, CameraHeight = 10f, ADSFlag = false };
+            CombatCamera = new CameraClass { CameraDistance = -210f, CameraHeight = 10f };
         }
     }
-    public class CameraClass
+    public partial class CameraClass
     {
         public float CameraDistance { get; set; }
         public float CameraHeight { get; set; }
-    }
-
-    public class CombatCamera : CameraClass
-    {
-        public bool ADSFlag;
     }
 }

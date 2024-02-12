@@ -33,7 +33,6 @@ namespace DynamicCamera
         private float cameraBaseHeight;
         private float cameraCombatDistance;
         private float cameraCombatHeight;
-        private bool combatADSFlag;
 
         public CameraSave? DeserializeFromJsonFile(string filePath)
         {
@@ -89,26 +88,15 @@ namespace DynamicCamera
             cameraBaseHeight = cameraSave.BaseCamera.CameraHeight;
             cameraCombatDistance = cameraSave.CombatCamera.CameraDistance;
             cameraCombatHeight = cameraSave.CombatCamera.CameraHeight;
-            combatADSFlag = cameraSave.CombatCamera.ADSFlag;
         }
 
         private bool IsInNonCombatArea() => nonCombatStages.Contains(Area.CurrentStage);
 
         private bool CheckFOV(Stage stage, float FOV)
         {
-            if (combatADSFlag && !IsInNonCombatArea()) 
+            if (FOVRange.TryGetValue(stage, out var fovRange))
             {
-                if (FOVRange.TryGetValue(stage, out var fovRange))
-                {
-                    return FOV >= 45f && FOV <= (fovRange + 4f);
-                }
-            }
-            else 
-            {
-                if (FOVRange.TryGetValue(stage, out var fovRange))
-                {
-                    return FOV >= fovRange && FOV <= (fovRange + 4f);
-                }
+                return FOV >= fovRange && FOV <= (fovRange + 4f);
             }
             return FOV >= 53f && FOV <= 57f;
         }
@@ -186,7 +174,8 @@ namespace DynamicCamera
         }
 
         private void RenderCameraControls(Camera camera)
-        {   
+        {
+            //ImGui.Text($"Distance - {camera.GetRef<float>(DISTANCE_OFFSET)} | Height - {camera.GetRef<float>(HEIGHT_OFFSET)}");
             if (IsInNonCombatArea())
             {
                 ImGui.Text($"Base/Hub Camera Settings");
@@ -196,6 +185,7 @@ namespace DynamicCamera
 
                 cameraSave.BaseCamera.CameraDistance = cameraBaseDistance;
                 cameraSave.BaseCamera.CameraHeight = cameraBaseHeight;
+
             }
             else
             {
@@ -207,12 +197,9 @@ namespace DynamicCamera
                 cameraSave.CombatCamera.CameraDistance = cameraCombatDistance;
                 cameraSave.CombatCamera.CameraHeight = cameraCombatHeight;
             }
-
-            ImGui.Checkbox("Enable it for ADS in Combat Zones", ref combatADSFlag);
-            cameraSave.CombatCamera.ADSFlag = combatADSFlag;
-            
             if (ImGui.Button("Save"))
-            {              
+            {
+                
                 SerializeToJsonFile(cameraSave, FILE_PATH);
                 Log.Info("Settings saved in \\nativePC\\plugins\\CSharp\\camera_config.json");
             }
@@ -227,11 +214,8 @@ namespace DynamicCamera
                 return;
             if (camera is not null)
             {
-                //var weapon = Player.MainPlayer?.CurrentWeapon;
                 //ImGui.Text($"Area - {Area.CurrentStage} FOV - {camera.FieldOfView}");
                 //ImGui.Text($"Type - {camera.GetDti().Name}");
-                //ImGui.Text($"Distance - {camera.Get<float>(DISTANCE_OFFSET)} | Height - {camera.Get<float>(HEIGHT_OFFSET)}");
-                //ImGui.Text($"Weapon Type - {weapon.GetDti().Name}");
                 if (CheckFOV(Area.CurrentStage, camera.FieldOfView))
                 {
                     RenderCameraControls(camera);
