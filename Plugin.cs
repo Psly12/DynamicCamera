@@ -79,7 +79,7 @@ namespace DynamicCamera
         {
             Log.Info("Loaded Dynamic Camera");
             var nopBytes = Enumerable.Repeat<byte>(0x90, 15).ToArray();
-            _distPatch = new Patch(unchecked((nint)0x141fa6504), nopBytes, true);
+            _distPatch = new Patch(unchecked((nint)0x141fa6564), nopBytes, true);
 
             cameraSave = File.Exists(FILE_PATH) ? DeserializeFromJsonFile(FILE_PATH) ?? new CameraSave() : new CameraSave();
 
