@@ -29,6 +29,7 @@ namespace DynamicCamera
         private readonly Stage[] nonCombatStages = StageConditionals.nonCombatStages;
         private readonly Dictionary<Stage, float> FOVRange = StageConditionals.FOVRanges;
 
+        private bool pluginFlag;
         private float cameraBaseDistance;
         private float cameraBaseHeight;
         private float cameraCombatDistance;
@@ -51,6 +52,7 @@ namespace DynamicCamera
 
         public void SerializeToJsonFile(CameraSave cameraSave, string filePath)
         {
+            cameraSave.PluginFlag = pluginFlag;
             JsonSerializerOptions options = new JsonSerializerOptions
             {
                 WriteIndented = true // This makes the output JSON formatted for better readability
@@ -67,23 +69,20 @@ namespace DynamicCamera
             }
         }
 
-        public PluginData Initialize()
+        public PluginData Initialize() 
         {
-            return new PluginData
-            {
-                OnUpdate = true,
-                OnImGuiRender = true
-            };
+            return new PluginData();
         }
 
         public void OnLoad()
         {
             Log.Info("Loaded Dynamic Camera");
             var nopBytes = Enumerable.Repeat<byte>(0x90, 15).ToArray();
-            _distPatch = new Patch(unchecked((nint)0x141fa6504), nopBytes, true);
+            _distPatch = new Patch(unchecked((nint)0x141fa6564), nopBytes, true);
 
             cameraSave = File.Exists(FILE_PATH) ? DeserializeFromJsonFile(FILE_PATH) ?? new CameraSave() : new CameraSave();
 
+            pluginFlag = cameraSave.PluginFlag;
             cameraBaseDistance = cameraSave.BaseCamera.CameraDistance;
             cameraBaseHeight = cameraSave.BaseCamera.CameraHeight;
             cameraCombatDistance = cameraSave.CombatCamera.CameraDistance;
@@ -197,16 +196,14 @@ namespace DynamicCamera
                 cameraSave.CombatCamera.CameraDistance = cameraCombatDistance;
                 cameraSave.CombatCamera.CameraHeight = cameraCombatHeight;
             }
-            if (ImGui.Button("Save"))
-            {
-                
-                SerializeToJsonFile(cameraSave, FILE_PATH);
-                Log.Info("Settings saved in \\nativePC\\plugins\\CSharp\\camera_config.json");
-            }
+
+            ImGui.Checkbox("Enable it for ADS in Combat Zones", ref combatADSFlag);
+            cameraSave.CombatCamera.ADSFlag = combatADSFlag;
         }
 
         public void OnImGuiRender()
         {
+            ImGui.Checkbox("Enable", ref pluginFlag);
             if (Area.CurrentStage == 0)
                 return;
             var camera = CameraSystem.MainViewport.Camera;
@@ -221,22 +218,37 @@ namespace DynamicCamera
                     RenderCameraControls(camera);
                 }
             }
+            if (ImGui.Button("Save"))
+            {              
+                SerializeToJsonFile(cameraSave, FILE_PATH);
+                Log.Info("Settings saved in \\nativePC\\plugins\\CSharp\\camera_config.json");
+            }
         }
 
         public void OnUpdate(float dt)
         {
-            if (Area.CurrentStage == 0)
-                return;
-            var camera = CameraSystem.MainViewport.Camera;
-            if (camera is not null)
+            if (this.pluginFlag) 
             {
-                if (CheckFOV(Area.CurrentStage, camera.FieldOfView))
+                if (Area.CurrentStage == 0)
+                    return;
+                var camera = CameraSystem.MainViewport.Camera;
+                if (camera is not null)
                 {
-                    DistpatchSwitch(true, camera);
+                    if (CheckFOV(Area.CurrentStage, camera.FieldOfView))
+                    {
+                        DistpatchSwitch(true, camera);
+                    }
+                    else
+                    {
+                        DistpatchSwitch(false, camera);
+                    }
                 }
-                else
+            }
+            else 
+            {
+                if (this._distPatch.IsEnabled) 
                 {
-                    DistpatchSwitch(false, camera);
+                    this._distPatch.Disable();
                 }
             }
         }
