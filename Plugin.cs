@@ -21,10 +21,11 @@ namespace DynamicCamera
         private const nint DISTANCE_OFFSET = 0x748;
         private const nint HEIGHT_OFFSET = 0x744;
 
-        private const float CAMERA_DISTANCE_MIN = -1500f;
-        private const float CAMERA_DISTANCE_MAX = 2000f;
-        private const float CAMERA_HEIGHT_MIN = -1125f;
-        private const float CAMERA_HEIGHT_MAX = 1950f;
+        private const float CAMERA_DISTANCE_MIN = -15000f;
+        private const float CAMERA_DISTANCE_MAX = 20000f;
+        private const float CAMERA_HEIGHT_MIN = -11250f;
+        private const float CAMERA_HEIGHT_MAX = 19500f;
+
 
         private readonly Stage[] nonCombatStages = StageConditionals.nonCombatStages;
         private readonly Dictionary<Stage, float> FOVRange = StageConditionals.FOVRanges;
@@ -179,8 +180,8 @@ namespace DynamicCamera
             {
                 ImGui.Text($"Base/Hub Camera Settings");
 
-                ImGui.DragFloat("Camera Distance", ref cameraBaseDistance, 1f, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX);
-                ImGui.DragFloat("Camera Height", ref cameraBaseHeight, 1f, CAMERA_HEIGHT_MIN, CAMERA_HEIGHT_MAX);
+                ImGui.SliderFloat("Camera Distance", ref cameraBaseDistance, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, "%.0f", ImGuiSliderFlags.Logarithmic);
+                ImGui.SliderFloat("Camera Height", ref cameraBaseHeight, CAMERA_HEIGHT_MIN, CAMERA_HEIGHT_MAX, "%.0f", ImGuiSliderFlags.Logarithmic);
 
                 cameraSave.BaseCamera.CameraDistance = cameraBaseDistance;
                 cameraSave.BaseCamera.CameraHeight = cameraBaseHeight;
@@ -190,8 +191,8 @@ namespace DynamicCamera
             {
                 ImGui.Text($"Combat Camera Settings");
 
-                ImGui.DragFloat("Camera Distance", ref cameraCombatDistance, 1f, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX);
-                ImGui.DragFloat("Camera Height", ref cameraCombatHeight, 1f, CAMERA_HEIGHT_MIN, CAMERA_HEIGHT_MAX);
+                ImGui.SliderFloat("Camera Distance", ref cameraCombatDistance, CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, "%.0f", ImGuiSliderFlags.Logarithmic);
+                ImGui.SliderFloat("Camera Height", ref cameraCombatHeight, CAMERA_HEIGHT_MIN, CAMERA_HEIGHT_MAX, "%.0f", ImGuiSliderFlags.Logarithmic);
 
                 cameraSave.CombatCamera.CameraDistance = cameraCombatDistance;
                 cameraSave.CombatCamera.CameraHeight = cameraCombatHeight;
